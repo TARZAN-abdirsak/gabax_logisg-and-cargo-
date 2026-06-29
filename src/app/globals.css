@@ -1,0 +1,524 @@
+@import "tailwindcss";
+
+:root {
+  --background: #fafbfc;
+  --foreground: #091524;
+  --brand-navy: #091524;
+  --brand-blue: #2563eb;
+  --brand-yellow: #f3c116;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans), sans-serif;
+  --font-mono: var(--font-geist-mono), monospace;
+  --font-display: var(--font-anton), sans-serif;
+  
+  /* Custom Movexa Theme Colors */
+  --color-brand-navy: var(--brand-navy);
+  --color-brand-blue: var(--brand-blue);
+  --color-brand-yellow: var(--brand-yellow);
+  --color-brand-dark: #060e18;
+  --color-brand-card-bg: rgba(255, 255, 255, 0.8);
+  --color-brand-glass-border: rgba(255, 255, 255, 0.12);
+  --color-brand-blue-accent: #1d4ed8;
+  --color-brand-yellow-accent: #dbab09;
+}
+
+/* Keep horizontal overflow clipped on the root element too — iOS Safari often
+   ignores overflow-x on <body> alone, letting the page render wider than the
+   viewport, which makes phones shrink-to-fit and treat taps as zoom gestures. */
+html,
+body {
+  overflow-x: hidden;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), sans-serif;
+  /* Disable double-tap-to-zoom (and the 300ms tap delay) so taps on the navbar
+     and buttons register as clicks on real phones instead of zooming the page.
+     Pinch-to-zoom still works. */
+  touch-action: manipulation;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-anton), sans-serif;
+  letter-spacing: -0.02em;
+}
+
+/* Glassmorphism helpers for the header and widgets */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.glass-panel-dark {
+  background: rgba(9, 21, 36, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* SVG flowing line animation */
+@keyframes dash {
+  0% {
+    stroke-dashoffset: 0;
+  }
+  100% {
+    stroke-dashoffset: 200;
+  }
+}
+
+/* SVG Route Drawing & Waypoint Sequential Animations */
+@keyframes drawPath {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes popIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.6) translateY(10px);
+  }
+  70% {
+    transform: scale(1.15) translateY(-2px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes fadeInDashed {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 0.3;
+  }
+}
+
+/* Base states (before animation starts) */
+.route-svg-container .route-path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+}
+
+.route-svg-container .route-path-dashed {
+  opacity: 0;
+}
+
+.route-svg-container .waypoint {
+  opacity: 0;
+  transform-origin: center;
+  transform-box: fill-box;
+}
+
+/* Active animation states */
+.route-svg-container.animate-route .route-path {
+  animation: drawPath 3.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+.route-svg-container.animate-route .route-path-dashed {
+  animation: fadeInDashed 0.8s ease 3.5s forwards;
+}
+
+.route-svg-container.animate-route .waypoint-origin {
+  animation: popIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0s forwards;
+}
+
+.route-svg-container.animate-route .waypoint-pickup {
+  animation: popIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 1.0s forwards;
+}
+
+.route-svg-container.animate-route .waypoint-warehouse {
+  animation: popIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 1.8s forwards;
+}
+
+.route-svg-container.animate-route .waypoint-transit {
+  animation: popIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 2.6s forwards;
+}
+
+.route-svg-container.animate-route .waypoint-delivered {
+  animation: popIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 3.5s forwards;
+}
+
+/* ==========================================================================
+   GABAX WIRE — News portal helpers (live ticker + entrance)
+   ========================================================================== */
+
+@keyframes newsTicker {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.news-ticker-track {
+  display: inline-flex;
+  flex-shrink: 0;
+  white-space: nowrap;
+  will-change: transform;
+  animation: newsTicker 45s linear infinite;
+}
+
+.news-ticker:hover .news-ticker-track {
+  animation-play-state: paused;
+}
+
+@keyframes newsRise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.news-rise {
+  opacity: 0;
+  animation: newsRise 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* ==========================================================================
+   GABAX OPS DECK — Admin design system
+   A dark, glassmorphic logistics "control room". Scoped under .admin-theme
+   so none of these styles leak into the public site.
+   ========================================================================== */
+
+.admin-theme {
+  --ad-ink: #060912;
+  --ad-ink-2: #0a0f1c;
+  --ad-line: rgba(255, 255, 255, 0.08);
+  --ad-line-strong: rgba(255, 255, 255, 0.16);
+  --ad-text: #e8eef8;
+  --ad-muted: #8492ab;
+  --ad-faint: #56627a;
+  --ad-amber: #f5c518;
+  --ad-amber-soft: rgba(245, 197, 24, 0.14);
+  --ad-teal: #2dd4bf;
+  --ad-teal-soft: rgba(45, 212, 191, 0.14);
+  --ad-blue: #4f86f7;
+  --ad-danger: #fb7185;
+  --ad-glass: rgba(255, 255, 255, 0.035);
+  --ad-glass-2: rgba(255, 255, 255, 0.06);
+
+  --font-display: var(--font-bricolage), system-ui, sans-serif;
+  --font-data: var(--font-jetbrains), ui-monospace, monospace;
+
+  position: relative;
+  min-height: 100vh;
+  color: var(--ad-text);
+  background-color: var(--ad-ink);
+  font-family: var(--font-geist-sans), sans-serif;
+  overflow-x: hidden;
+}
+
+/* Atmosphere: faint grid + floating amber/teal glow orbs */
+.admin-theme::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.022) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.022) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 90% 70% at 50% 0%, #000 30%, transparent 80%);
+}
+
+.admin-theme::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(40rem 30rem at 12% -8%, rgba(245, 197, 24, 0.12), transparent 60%),
+    radial-gradient(36rem 28rem at 92% 8%, rgba(45, 212, 191, 0.1), transparent 60%),
+    radial-gradient(50rem 40rem at 50% 120%, rgba(79, 134, 247, 0.08), transparent 60%);
+}
+
+.admin-theme > * {
+  position: relative;
+  z-index: 1;
+}
+
+.admin-theme h1,
+.admin-theme h2,
+.admin-theme h3 {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+  color: var(--ad-text);
+}
+
+/* Mono label — the "telemetry" voice */
+.ad-label {
+  font-family: var(--font-data);
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ad-faint);
+}
+
+.ad-mono {
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Glass surfaces */
+.ad-panel {
+  background: var(--ad-glass);
+  border: 1px solid var(--ad-line);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-radius: 1rem;
+}
+
+.ad-card {
+  background: linear-gradient(180deg, var(--ad-glass-2), var(--ad-glass));
+  border: 1px solid var(--ad-line);
+  border-radius: 1.1rem;
+  transition:
+    border-color 0.25s ease,
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.ad-card:hover {
+  border-color: var(--ad-line-strong);
+  transform: translateY(-2px);
+  box-shadow: 0 18px 40px -24px rgba(0, 0, 0, 0.8);
+}
+
+/* Inputs */
+.ad-input,
+.ad-select,
+.ad-textarea {
+  width: 100%;
+  background: rgba(7, 11, 20, 0.6);
+  border: 1px solid var(--ad-line);
+  border-radius: 0.7rem;
+  padding: 0.6rem 0.85rem;
+  font-size: 0.875rem;
+  color: var(--ad-text);
+  outline: none;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.ad-input::placeholder,
+.ad-textarea::placeholder {
+  color: var(--ad-faint);
+}
+
+.ad-input:focus,
+.ad-select:focus,
+.ad-textarea:focus {
+  border-color: var(--ad-teal);
+  box-shadow: 0 0 0 3px var(--ad-teal-soft);
+}
+
+.ad-select option {
+  background: var(--ad-ink-2);
+  color: var(--ad-text);
+}
+
+/* Buttons */
+.ad-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.8rem;
+  padding: 0.62rem 1.1rem;
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    background 0.2s ease,
+    opacity 0.2s ease,
+    border-color 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.ad-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ad-btn-primary {
+  background: var(--ad-amber);
+  color: #1a1403;
+  box-shadow: 0 8px 26px -10px rgba(245, 197, 24, 0.6);
+}
+
+.ad-btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.ad-btn-ghost {
+  background: var(--ad-glass-2);
+  border-color: var(--ad-line);
+  color: var(--ad-text);
+}
+
+.ad-btn-ghost:hover:not(:disabled) {
+  border-color: var(--ad-line-strong);
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.ad-btn-danger {
+  background: transparent;
+  color: var(--ad-danger);
+}
+
+.ad-btn-danger:hover:not(:disabled) {
+  background: rgba(251, 113, 133, 0.12);
+}
+
+/* Chips / tags */
+.ad-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-family: var(--font-data);
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid var(--ad-line);
+  color: var(--ad-muted);
+}
+
+.ad-chip-amber {
+  color: var(--ad-amber);
+  border-color: rgba(245, 197, 24, 0.35);
+  background: var(--ad-amber-soft);
+}
+
+.ad-chip-teal {
+  color: var(--ad-teal);
+  border-color: rgba(45, 212, 191, 0.35);
+  background: var(--ad-teal-soft);
+}
+
+.ad-chip-blue {
+  color: #9bbcff;
+  border-color: rgba(79, 134, 247, 0.35);
+  background: rgba(79, 134, 247, 0.14);
+}
+
+/* Sidebar nav */
+.ad-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border-radius: 0.7rem;
+  padding: 0.65rem 0.8rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--ad-muted);
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.ad-nav-link:hover {
+  background: var(--ad-glass-2);
+  color: var(--ad-text);
+}
+
+.ad-nav-link.active {
+  background: linear-gradient(90deg, var(--ad-amber-soft), transparent);
+  color: var(--ad-text);
+  box-shadow: inset 2px 0 0 var(--ad-amber);
+}
+
+/* Live pulse indicator */
+.ad-pulse {
+  position: relative;
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--ad-teal);
+}
+
+.ad-pulse::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: var(--ad-teal);
+  animation: adPing 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes adPing {
+  0% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  80%,
+  100% {
+    transform: scale(3);
+    opacity: 0;
+  }
+}
+
+/* Staggered entrance for grids/cards on load */
+@keyframes adRise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ad-rise {
+  opacity: 0;
+  animation: adRise 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* Infinite Marquee Animation */
+@keyframes scroll-x {
+  from { transform: translateX(0); }
+  to { transform: translateX(calc(-50% - 1rem)); } /* -50% shifts half of the flex width, -1rem for gap */
+}
+.animate-marquee {
+  animation: scroll-x 35s linear infinite;
+}
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
