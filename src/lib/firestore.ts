@@ -13,7 +13,7 @@ export async function getAll<T>(collection: string): Promise<T[]> {
     .collection(collection)
     .orderBy('createdAt', 'desc')
     .get();
-  return snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }) as T);
+  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as T);
 }
 
 /** Get a single document by ID. Returns null if not found. */

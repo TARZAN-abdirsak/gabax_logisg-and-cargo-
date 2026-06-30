@@ -1,5 +1,5 @@
 import { initializeApp, getApps, cert, type ServiceAccount } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
+import { getFirestore, type Firestore } from 'firebase-admin/firestore';
 
 /**
  * Firebase Admin SDK — server-side only.
@@ -35,4 +35,4 @@ function getApp() {
 }
 
 const app = getApp();
-export const db = app ? getFirestore(app) : null as any;
+export const db: Firestore = app ? getFirestore(app) : (null as unknown as Firestore);
