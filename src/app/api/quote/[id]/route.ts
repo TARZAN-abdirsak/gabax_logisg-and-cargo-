@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type { ApiResponse } from '@/types/common';
 import type { QuoteItem, QuoteStatus } from '@/types/quote';
-import { readCollection, writeCollection } from '@/lib/jsonStore';
+import { getById, updateDoc, deleteDoc } from '@/lib/firestore';
 import { isAuthenticated } from '@/lib/auth';
 
-const FILE = 'quotes.json';
+const COLLECTION = 'quotes';
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -42,18 +42,16 @@ export async function PATCH(
     );
   }
 
-  const all = await readCollection<QuoteItem>(FILE);
-  const index = all.findIndex((q) => q.id === id);
-  if (index === -1) {
+  const existing = await getById<QuoteItem>(COLLECTION, id);
+  if (!existing) {
     return NextResponse.json(
       { success: false, error: 'Quote request not found' },
       { status: 404 },
     );
   }
 
-  const updated: QuoteItem = { ...all[index], status: body.status as QuoteStatus };
-  all[index] = updated;
-  await writeCollection(FILE, all);
+  await updateDoc(COLLECTION, id, { status: body.status as QuoteStatus });
+  const updated: QuoteItem = { ...existing, status: body.status as QuoteStatus };
 
   return NextResponse.json({ success: true, data: updated });
 }
@@ -74,15 +72,13 @@ export async function DELETE(
   }
 
   const { id } = await params;
-  const all = await readCollection<QuoteItem>(FILE);
-  const next = all.filter((q) => q.id !== id);
-  if (next.length === all.length) {
+  const deleted = await deleteDoc(COLLECTION, id);
+  if (!deleted) {
     return NextResponse.json(
       { success: false, error: 'Quote request not found' },
       { status: 404 },
     );
   }
 
-  await writeCollection(FILE, next);
   return NextResponse.json({ success: true, data: { id } });
 }

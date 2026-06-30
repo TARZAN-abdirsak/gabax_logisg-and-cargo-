@@ -2,14 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'node:crypto';
 import type { ApiResponse } from '@/types/common';
 import type { QuoteItem, QuoteRequest } from '@/types/quote';
-import { readCollection, writeCollection } from '@/lib/jsonStore';
+import { getAll, addDoc } from '@/lib/firestore';
 import { isAuthenticated } from '@/lib/auth';
 
-const FILE = 'quotes.json';
-
-function byNewest(a: QuoteItem, b: QuoteItem): number {
-  return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-}
+const COLLECTION = 'quotes';
 
 /**
  * GET /api/quote
@@ -23,8 +19,8 @@ export async function GET(): Promise<NextResponse<ApiResponse<QuoteItem[]>>> {
     );
   }
 
-  const all = await readCollection<QuoteItem>(FILE);
-  return NextResponse.json({ success: true, data: [...all].sort(byNewest) });
+  const all = await getAll<QuoteItem>(COLLECTION);
+  return NextResponse.json({ success: true, data: all });
 }
 
 /**
@@ -68,9 +64,7 @@ export async function POST(
     createdAt: new Date().toISOString(),
   };
 
-  const all = await readCollection<QuoteItem>(FILE);
-  all.push(quote);
-  await writeCollection(FILE, all);
+  await addDoc(COLLECTION, quote.id, { ...quote });
 
   return NextResponse.json(
     { success: true, data: quote, message: 'Codsigaga qiimo-sheegga waa la helay. Waan kula soo xiriiri doonaa dhawaan.' },

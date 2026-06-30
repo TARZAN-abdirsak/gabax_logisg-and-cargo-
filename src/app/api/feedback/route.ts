@@ -2,15 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'node:crypto';
 import type { ApiResponse } from '@/types/common';
 import type { FeedbackItem, PublicTestimonial } from '@/types/feedback';
-import { readCollection, writeCollection } from '@/lib/jsonStore';
+import { getAll, addDoc } from '@/lib/firestore';
 import { createFeedbackSchema } from '@/lib/schemas';
 import { isAuthenticated } from '@/lib/auth';
 
-const FILE = 'feedback.json';
-
-function byNewest(a: FeedbackItem, b: FeedbackItem): number {
-  return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-}
+const COLLECTION = 'feedback';
 
 /**
  * GET /api/feedback
@@ -24,10 +20,9 @@ export async function GET(
   const isPublic = request.nextUrl.searchParams.get('public') === 'true';
 
   if (isPublic) {
-    const all = await readCollection<FeedbackItem>(FILE);
+    const all = await getAll<FeedbackItem>(COLLECTION);
     const testimonials: PublicTestimonial[] = all
       .filter((f) => f.status === 'reviewed')
-      .sort(byNewest)
       .map(({ id, name, rating, message, createdAt }) => ({
         id,
         name,
@@ -45,8 +40,8 @@ export async function GET(
     );
   }
 
-  const all = await readCollection<FeedbackItem>(FILE);
-  return NextResponse.json({ success: true, data: [...all].sort(byNewest) });
+  const all = await getAll<FeedbackItem>(COLLECTION);
+  return NextResponse.json({ success: true, data: all });
 }
 
 /**
@@ -85,9 +80,7 @@ export async function POST(
     createdAt: new Date().toISOString(),
   };
 
-  const all = await readCollection<FeedbackItem>(FILE);
-  all.push(item);
-  await writeCollection(FILE, all);
+  await addDoc(COLLECTION, item.id, { ...item });
 
   return NextResponse.json(
     { success: true, data: item, message: 'Thanks for your feedback!' },

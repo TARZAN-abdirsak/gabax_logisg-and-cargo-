@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type { ApiResponse } from '@/types/common';
 import type { FeedbackItem } from '@/types/feedback';
-import { readCollection, writeCollection } from '@/lib/jsonStore';
+import { getById, updateDoc, deleteDoc } from '@/lib/firestore';
 import { updateFeedbackSchema } from '@/lib/schemas';
 import { isAuthenticated } from '@/lib/auth';
 
-const FILE = 'feedback.json';
+const COLLECTION = 'feedback';
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -44,18 +44,16 @@ export async function PATCH(
     );
   }
 
-  const all = await readCollection<FeedbackItem>(FILE);
-  const index = all.findIndex((f) => f.id === id);
-  if (index === -1) {
+  const existing = await getById<FeedbackItem>(COLLECTION, id);
+  if (!existing) {
     return NextResponse.json(
       { success: false, error: 'Feedback not found' },
       { status: 404 },
     );
   }
 
-  const updated: FeedbackItem = { ...all[index], status: parsed.data.status };
-  all[index] = updated;
-  await writeCollection(FILE, all);
+  await updateDoc(COLLECTION, id, { status: parsed.data.status });
+  const updated: FeedbackItem = { ...existing, status: parsed.data.status };
 
   return NextResponse.json({ success: true, data: updated });
 }
@@ -76,15 +74,13 @@ export async function DELETE(
   }
 
   const { id } = await params;
-  const all = await readCollection<FeedbackItem>(FILE);
-  const next = all.filter((f) => f.id !== id);
-  if (next.length === all.length) {
+  const deleted = await deleteDoc(COLLECTION, id);
+  if (!deleted) {
     return NextResponse.json(
       { success: false, error: 'Feedback not found' },
       { status: 404 },
     );
   }
 
-  await writeCollection(FILE, next);
   return NextResponse.json({ success: true, data: { id } });
 }

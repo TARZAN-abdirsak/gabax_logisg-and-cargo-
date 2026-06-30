@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'node:crypto';
 import type { ApiResponse } from '@/types/common';
-import { readCollection, writeCollection } from '@/lib/jsonStore';
+import { addDoc } from '@/lib/firestore';
 
 interface ContactBody {
   name: string;
@@ -16,7 +16,7 @@ interface ContactMessage extends ContactBody {
   createdAt: string;
 }
 
-const FILE = 'contacts.json';
+const COLLECTION = 'contacts';
 
 export async function POST(
   request: NextRequest,
@@ -38,7 +38,7 @@ export async function POST(
     );
   }
 
-  const contactMessage = {
+  const contactMessage: ContactMessage = {
     id: randomUUID(),
     name: body.name,
     email: body.email,
@@ -48,9 +48,7 @@ export async function POST(
     createdAt: new Date().toISOString(),
   };
 
-  const all = await readCollection<ContactMessage>(FILE);
-  all.push(contactMessage);
-  await writeCollection(FILE, all);
+  await addDoc(COLLECTION, contactMessage.id, { ...contactMessage });
 
   return NextResponse.json(
     { success: true, message: 'Message sent successfully!' },

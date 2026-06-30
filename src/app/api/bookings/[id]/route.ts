@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type { ApiResponse } from '@/types/common';
 import type { Booking } from '@/types/booking';
-import { readCollection, writeCollection } from '@/lib/jsonStore';
+import { getById, updateDoc, deleteDoc } from '@/lib/firestore';
 import { updateBookingSchema } from '@/lib/schemas';
 import { isAuthenticated } from '@/lib/auth';
 
-const FILE = 'bookings.json';
+const COLLECTION = 'bookings';
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -44,18 +44,16 @@ export async function PATCH(
     );
   }
 
-  const all = await readCollection<Booking>(FILE);
-  const index = all.findIndex((b) => b.id === id);
-  if (index === -1) {
+  const existing = await getById<Booking>(COLLECTION, id);
+  if (!existing) {
     return NextResponse.json(
       { success: false, error: 'Booking not found' },
       { status: 404 },
     );
   }
 
-  const updated: Booking = { ...all[index], status: parsed.data.status };
-  all[index] = updated;
-  await writeCollection(FILE, all);
+  await updateDoc(COLLECTION, id, { status: parsed.data.status });
+  const updated: Booking = { ...existing, status: parsed.data.status };
 
   return NextResponse.json({ success: true, data: updated });
 }
@@ -76,15 +74,13 @@ export async function DELETE(
   }
 
   const { id } = await params;
-  const all = await readCollection<Booking>(FILE);
-  const next = all.filter((b) => b.id !== id);
-  if (next.length === all.length) {
+  const deleted = await deleteDoc(COLLECTION, id);
+  if (!deleted) {
     return NextResponse.json(
       { success: false, error: 'Booking not found' },
       { status: 404 },
     );
   }
 
-  await writeCollection(FILE, next);
   return NextResponse.json({ success: true, data: { id } });
 }

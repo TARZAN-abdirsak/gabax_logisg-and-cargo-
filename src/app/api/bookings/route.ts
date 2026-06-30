@@ -2,15 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'node:crypto';
 import type { ApiResponse } from '@/types/common';
 import type { Booking } from '@/types/booking';
-import { readCollection, writeCollection } from '@/lib/jsonStore';
+import { getAll, addDoc } from '@/lib/firestore';
 import { createBookingSchema } from '@/lib/schemas';
 import { isAuthenticated } from '@/lib/auth';
 
-const FILE = 'bookings.json';
-
-function byNewest(a: Booking, b: Booking): number {
-  return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-}
+const COLLECTION = 'bookings';
 
 /**
  * GET /api/bookings
@@ -24,8 +20,8 @@ export async function GET(): Promise<NextResponse<ApiResponse<Booking[]>>> {
     );
   }
 
-  const all = await readCollection<Booking>(FILE);
-  return NextResponse.json({ success: true, data: [...all].sort(byNewest) });
+  const all = await getAll<Booking>(COLLECTION);
+  return NextResponse.json({ success: true, data: all });
 }
 
 /**
@@ -69,9 +65,7 @@ export async function POST(
     createdAt: new Date().toISOString(),
   };
 
-  const all = await readCollection<Booking>(FILE);
-  all.push(booking);
-  await writeCollection(FILE, all);
+  await addDoc(COLLECTION, booking.id, { ...booking });
 
   return NextResponse.json(
     { success: true, data: booking, message: 'Booking received!' },
