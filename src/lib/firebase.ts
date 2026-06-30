@@ -9,17 +9,30 @@ import { getFirestore } from 'firebase-admin/firestore';
  * environment-variables dashboard.
  */
 
-const serviceAccount: ServiceAccount = {
-  projectId: process.env.FIREBASE_PROJECT_ID!,
-  clientEmail: process.env.FIREBASE_CLIENT_EMAIL!,
-  privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-};
+const projectId = process.env.FIREBASE_PROJECT_ID;
+const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+const privateKey = process.env.FIREBASE_PRIVATE_KEY;
+
+const hasCredentials = !!(projectId && clientEmail && privateKey);
 
 function getApp() {
+  if (!hasCredentials) {
+    if (process.env.NODE_ENV === 'production') {
+      console.warn('WARNING: Firebase credentials are missing. Deferring initialization.');
+    }
+    return null;
+  }
+
   if (getApps().length === 0) {
+    const serviceAccount: ServiceAccount = {
+      projectId,
+      clientEmail,
+      privateKey: privateKey?.replace(/\\n/g, '\n'),
+    };
     return initializeApp({ credential: cert(serviceAccount) });
   }
   return getApps()[0];
 }
 
-export const db = getFirestore(getApp());
+const app = getApp();
+export const db = app ? getFirestore(app) : null as any;
