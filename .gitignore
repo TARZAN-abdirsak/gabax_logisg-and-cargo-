@@ -25,6 +25,11 @@
 Thumbs.db
 *.pem
 
+# Firebase / GCP service account keys — never commit
+*serviceAccount*.json
+*-adminsdk-*.json
+*firebase-adminsdk*.json
+
 # local JSON data store (news + feedback)
 /data
 
